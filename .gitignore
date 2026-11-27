@@ -1,0 +1,27 @@
+# Generated Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Training outputs and weight files
+*.pth
+*.pt
+*.ckpt
+*.log
+work_dirs*/
+outputs/
+
+# Local data and checkpoints; retain documentation
+data/*
+!data/README.md
+checkpoints/*
+!checkpoints/README.md
+
+# Private and historical configurations
+configs/tec_nas/*_local.py
+*.bak
+*.backup*
+*~
+.DS_Store

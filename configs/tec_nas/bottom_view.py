@@ -1,0 +1,182 @@
+dataset_type = 'CocoDataset_B'
+data_root = 'data/Bottom_View_V2/'
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='Resize', img_scale=(700, 512), keep_ratio=True),
+    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(
+        type='Normalize',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True),
+    dict(type='Pad', size_divisor=32),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(700, 512),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='Pad', size_divisor=32),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data = dict(
+    samples_per_gpu=16,
+    workers_per_gpu=2,
+    train=dict(
+        type='CocoDataset_B',
+        ann_file='data/Bottom_View_V2/annotations/instances_train2017.json',
+        img_prefix='data/Bottom_View_V2/images/train/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations', with_bbox=True),
+            dict(type='Resize', img_scale=(700, 512), keep_ratio=True),
+            dict(type='RandomFlip', flip_ratio=0.5),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='Pad', size_divisor=32),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
+        ],
+        classes=('ACH_T', 'BBK_T', 'BCP_T', 'BCP_F', 'BSL_T', 'BSL_F', 'CZA_T',
+                 'COH_T', 'COH_F', 'DCM_T', 'DCM_F', 'FBM_T', 'FBM_F', 'PRM_T',
+                 'PRM_F', 'SCL_T')),
+    val=dict(
+        type='CocoDataset_B',
+        ann_file='data/Bottom_View_V2/annotations/instances_val2017.json',
+        img_prefix='data/Bottom_View_V2/images/val/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(700, 512),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='Pad', size_divisor=32),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ],
+        classes=('ACH_T', 'BBK_T', 'BCP_T', 'BCP_F', 'BSL_T', 'BSL_F', 'CZA_T',
+                 'COH_T', 'COH_F', 'DCM_T', 'DCM_F', 'FBM_T', 'FBM_F', 'PRM_T',
+                 'PRM_F', 'SCL_T')),
+    test=dict(
+        type='CocoDataset_B',
+        ann_file='data/Bottom_View_V2/annotations/instances_val2017.json',
+        img_prefix='data/Bottom_View_V2/images/val/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(700, 512),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[123.675, 116.28, 103.53],
+                        std=[58.395, 57.12, 57.375],
+                        to_rgb=True),
+                    dict(type='Pad', size_divisor=32),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ],
+        classes=('ACH_T', 'BBK_T', 'BCP_T', 'BCP_F', 'BSL_T', 'BSL_F', 'CZA_T',
+                 'COH_T', 'COH_F', 'DCM_T', 'DCM_F', 'FBM_T', 'FBM_F', 'PRM_T',
+                 'PRM_F', 'SCL_T'),
+        test_mode=True,
+        samples_per_gpu=1))
+evaluation = dict(interval=1, metric='bbox')
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=None)
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=1000,
+    warmup_ratio=0.1,
+    step=[40, 46])
+total_epochs = 48
+checkpoint_config = dict(interval=1)
+log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]
+model = dict(
+    type='GFL',
+    neck=dict(
+        type='FPN',
+        in_channels=[256, 512, 768, 1024],
+        out_channels=192,
+        start_level=1,
+        add_extra_convs='on_output',
+        num_outs=5),
+    bbox_head=dict(
+        type='GFocalHead',
+        num_classes=16,
+        in_channels=192,
+        stacked_convs=4,
+        feat_channels=192,
+        anchor_generator=dict(
+            type='AnchorGenerator',
+            ratios=[1.0],
+            octave_base_scale=8,
+            scales_per_octave=1,
+            strides=[8, 16, 32, 64, 128]),
+        loss_cls=dict(
+            type='QualityFocalLoss',
+            use_sigmoid=False,
+            beta=2.0,
+            loss_weight=1.0),
+        loss_dfl=dict(type='DistributionFocalLoss', loss_weight=0.25),
+        reg_max=16,
+        reg_topk=4,
+        reg_channels=64,
+        add_mean=True,
+        loss_bbox=dict(type='GIoULoss', loss_weight=2.0)),
+    backbone=dict(
+        type='MadNas',
+        net_str='architectures/res50_like.txt',
+        out_indices=(1, 2, 3, 4),
+        init_cfg=None))
+train_cfg = dict(
+    assigner=dict(type='ATSSAssigner', topk=9),
+    allowed_border=-1,
+    pos_weight=-1,
+    debug=False)
+test_cfg = dict(
+    nms_pre=1000,
+    min_bbox_size=0,
+    score_thr=0.05,
+    nms=dict(type='nms', iou_threshold=0.6),
+    max_per_img=100)
+work_dir = './work_dirs_bottom/Resnet50/Budget_FLOPs_Params/e+l+f/custom_maedet_s_4x_lr0.02_r50'
+gpu_ids = range(0, 1)
